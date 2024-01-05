@@ -16,7 +16,7 @@ mycontroller = pyxinput.vController()
 #mycontroller2 = pyxinput.vController(1)
 
 # The buttons are indexed by the received button number from pygame
-buttons = ["BtnY","BtnB","BtnA","BtnX","BtnShoulderL","BtnShoulderR","TriggerL","TriggerR","BtnBack","BtnStart"]
+buttons = ["BtnY","BtnB","BtnA","BtnX","BtnShoulderL","BtnShoulderR","TriggerL","TriggerR","BtnBack","BtnStart","BtnThumbL","BtnThumbR"]
 
 # dpad buttons, from pygame's input to pyxinput's values
 dpa = {
