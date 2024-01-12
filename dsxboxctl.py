@@ -5,11 +5,11 @@ import numpy as num
 # Get controller inputs with pygame
 pygame.init()
 
-j = pygame.joystick.Joystick(1)
+j = pygame.joystick.Joystick(0)
 j.init()
 
 # Uncomment all commented code lines to have two controllers
-#j2 = pygame.joystick.Joystick(0)
+#j2 = pygame.joystick.Joystick(1)
 #j2.init()
 
 mycontroller = pyxinput.vController()
