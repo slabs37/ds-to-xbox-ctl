@@ -1,19 +1,24 @@
 import pygame
 import pyxinput
-import numpy as num
+from time import sleep
 
 # Get controller inputs with pygame
 pygame.init()
 
-j = pygame.joystick.Joystick(0)
-j.init()
+pycontroller = {}
+pyxcontroller = {}
+# Change this depending on how many controllers you have connected
+controllerCount = 2
+for i in range(controllerCount):
+    pycontroller[i] = pygame.joystick.Joystick(i)
+    pycontroller[i].init()
+    # pyxinput seems to need the first controller to be empty vController(), doesn't accept 0
+    if i == 0:
+        pyxcontroller[i] = pyxinput.vController()
+    else:
+        pyxcontroller[i] = pyxinput.vController(i)
 
-# Uncomment all commented code lines to have two controllers
-#j2 = pygame.joystick.Joystick(1)
-#j2.init()
 
-mycontroller = pyxinput.vController()
-#mycontroller2 = pyxinput.vController(1)
 
 # The buttons are indexed by the received button number from pygame
 buttons = ["BtnY","BtnB","BtnA","BtnX","BtnShoulderL","BtnShoulderR","TriggerL","TriggerR","BtnBack","BtnStart","BtnThumbL","BtnThumbR"]
@@ -31,51 +36,55 @@ dpa = {
     "00_10" : 0,
 }    
 
-try:
-    while True:
-        events = pygame.event.get()
-        for event in events:
-            if event.type == pygame.JOYBUTTONDOWN or pygame.JOYBUTTONUP:
-                for i, x in enumerate(buttons):
-                    # First Controller
-                    if j.get_button(i):
-                        print(x)
-                        mycontroller.set_value(x, 1)
-                    else:
-                        mycontroller.set_value(x, 0)
-                    # Second controller
-                    #if j2.get_button(i):
-                    #    print(x)
-                    #    mycontroller2.set_value(x, 1)
-                    #else:
-                    #    mycontroller2.set_value(x, 0)
-                
-            if event.type == pygame.JOYAXISMOTION:
-                mycontroller.set_value('AxisLx',num.ceil(j.get_axis(0)*100)/100)
-                mycontroller.set_value('AxisLy',num.ceil(-j.get_axis(1)*100)/100)
-                mycontroller.set_value('AxisRy',num.ceil(-j.get_axis(2)*100)/100)
-                mycontroller.set_value('AxisRx',num.ceil(j.get_axis(3)*100)/100)
-                
-                #mycontroller2.set_value('AxisLx',num.ceil(j2.get_axis(0)*100)/100)
-                #mycontroller2.set_value('AxisLy',num.ceil(-j2.get_axis(1)*100)/100)
-                #mycontroller2.set_value('AxisRy',num.ceil(-j2.get_axis(2)*100)/100)
-                #mycontroller2.set_value('AxisRx',num.ceil(j2.get_axis(3)*100)/100)
+def doJoysticks(event, controller):
+    if event.type == pygame.JOYAXISMOTION:
+        pyxcontroller[controller].set_value('AxisLx',round(int(pycontroller[controller].get_axis(0)*100.01)/100, 2))
+        pyxcontroller[controller].set_value('AxisLy',round(int(-pycontroller[controller].get_axis(1)*100.01)/100, 2))
+        pyxcontroller[controller].set_value('AxisRy',round(int(-pycontroller[controller].get_axis(2)*100.01)/100, 2))
+        pyxcontroller[controller].set_value('AxisRx',round(int(pycontroller[controller].get_axis(3)*100.01)/100, 2))
 
-            if event.type == pygame.JOYHATMOTION:
-                for rl in -1, 1, 0:
-                    for ud in -1, 1, 0:
-                        if j.get_hat(0)[0] == rl:              
-                            if j.get_hat(0)[1] == ud:
-                                # Construct dpa dictionary input
-                                distr = "0"+str(rl)+"_"+"1"+str(ud)
-                                print(distr)
-                                mycontroller.set_value("Dpad", dpa[distr])
-                        #if j2.get_hat(0)[0] == rl:              
-                        #    if j2.get_hat(0)[1] == ud:
-                        #        distr = "0"+str(rl)+"_"+"1"+str(ud)
-                        #        print(distr)
-                        #        mycontroller2.set_value("Dpad", dpa[distr])
-       
-except KeyboardInterrupt:
-    print("EXITING NOW")
-    j.quit()
+def doButtons(event, controller):
+    if event.type == pygame.JOYBUTTONDOWN or pygame.JOYBUTTONUP:
+        for i, x in enumerate(buttons):
+            if pycontroller[controller].get_button(i):
+                pyxcontroller[controller].set_value(x, 1)
+            else:
+                pyxcontroller[controller].set_value(x, 0)
+
+def doDpad(event, controller):
+    if event.type == pygame.JOYHATMOTION:
+        for rl in -1, 1, 0:
+            for ud in -1, 1, 0:
+                if pycontroller[controller].get_hat(0)[0] == rl:                  
+                    if pycontroller[controller].get_hat(0)[1] == ud:
+                        # Construct dpa dictionary input
+                        distr = "0"+str(rl)+"_"+"1"+str(ud)
+                        pyxcontroller[controller].set_value("Dpad", dpa[distr])
+
+def printControllers():
+    text = ""
+    for n in range(controllerCount):
+        text = text + f"Controller {n+1}, Left Joystick Pos : {pycontroller[n].get_axis(0):.2f} {-pycontroller[n].get_axis(1)+0.001:.2f}    "
+    print("\r" + text, end="")
+
+def __main__():
+    try:
+        print(f"Connected {controllerCount} controllers")
+        while True:
+            events = pygame.event.get()
+            for event in events:
+                for n in range(controllerCount):
+                    doButtons(event, n)
+                    doJoysticks(event, n)
+                    doDpad(event, n)
+            printControllers()
+            # For decreasing cpu usage :)
+            sleep(0.001)
+           
+            
+    except KeyboardInterrupt:
+        print("EXITING NOW")
+        for i in range(controllerCount):
+            pycontroller[i].quit()
+
+__main__()
