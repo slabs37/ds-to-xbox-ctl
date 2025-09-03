@@ -6,6 +6,7 @@ Takes Pygame controller input, maps it to virtual Xbox controllers
 For games that only support Xbox controllers.
 
 # Usage
+- `pip install pygame`
 - Install PYXInput and ScpVBus using the instructions available at [the PYXInput repository](https://github.com/bayangan1991/PYXInput)
 - Set number of controllers by changing controllerCount
 - Run the script
